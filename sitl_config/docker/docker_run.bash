@@ -102,17 +102,27 @@ else
     else
         echo "Creating a new container..."
         # docker run -d -it --name ${CONTAINER_NAME} -e DISPLAY=$DISPLAY -e XAUTHORITY=$XAUTHORITY -v ~/.Xauthority:/root/.Xauthority:ro px4-autopilot-gz:latest
+        xhost +local:
         docker run -it --name ${CONTAINER_NAME} \
           --detach \
           --privileged \
           -e DISPLAY=$DISPLAY \
           -e XAUTHORITY=$XAUTHORITY \
           -v ~/.Xauthority:/root/.Xauthority:ro \
+          -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+          -v /home/singhsegv/IISC/mobisys_2025/project_px4_vision:/root/custom:rw \
+          --gpus=all --runtime=nvidia \
+          --env="QT_X11_NO_MITSHM=1" \
+          --env="NVIDIA_VISIBLE_DEVICES=all" \
+          --env="NVIDIA_DRIVER_CAPABILITIES=all" \
+          --device=/dev/dri:/dev/dri \
           --network host \
-          px4-autopilot-gz:latest \
+          px4-autopilot-gz-container-camera:latest \
           tail -f /dev/null
     fi
 fi
 
 echo "Attaching to the running container..."
 docker exec -it -e DISPLAY=$DISPLAY -e XAUTHORITY=$XAUTHORITY ${CONTAINER_NAME} /bin/bash -c "${full_command}; exec bash"
+# docker exec -it -e DISPLAY=DISPLAY -e XAUTHORITY=$XAUTHORITY -e XSOCK=$XSOCK --env="QT_X11_NO_MITSHM=1" --env="NVIDIA_VISIBLE_DEVICES=all" --env="NVIDIA_DRIVER_CAPABILITIES=all" --device=/dev/dri:/dev/dri ${CONTAINER_NAME} /bin/bash -c "${full_command}; exec bash"
+          
